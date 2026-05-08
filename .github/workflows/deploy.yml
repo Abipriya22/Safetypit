@@ -24,15 +24,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Install frontend dependencies
         working-directory: SafePit_Full/frontend
         run: npm install
-
-      - name: Install Expo CLI
-        working-directory: SafePit_Full/frontend
-        run: npm install -g @expo/cli
 
       - name: Create env file
         working-directory: SafePit_Full/frontend
@@ -41,6 +37,8 @@ jobs:
       - name: Export Expo web build
         working-directory: SafePit_Full/frontend
         run: npx expo export -p web
+        env:
+          NODE_ENV: production
 
       - name: Create 404.html for SPA routing
         run: cp SafePit_Full/frontend/dist/index.html SafePit_Full/frontend/dist/404.html
