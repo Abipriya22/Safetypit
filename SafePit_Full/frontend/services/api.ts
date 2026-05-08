@@ -12,7 +12,11 @@ const getToken = async (): Promise<string | null> => {
 
 // ── Get BASE URL (auto-detect PC IP for physical phone) ──────────────
 const getBaseUrl = (): string => {
-  if (Platform.OS === 'web') return 'http://localhost:5000/api';
+  if (Platform.OS === 'web') {
+    return process.env.EXPO_PUBLIC_API_URL
+      ? `${process.env.EXPO_PUBLIC_API_URL}/api`
+      : 'http://localhost:5000/api';
+  }
   try {
     const Constants = require('expo-constants').default;
     const host = Constants.expoConfig?.hostUri?.split(':')[0];
