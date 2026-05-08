@@ -32,7 +32,7 @@ jobs:
 
       - name: Fix expo binary permissions
         working-directory: SafePit_Full/frontend
-        run: chmod +x node_modules/.bin/expo node_modules/.bin/react-native 2>/dev/null || true
+        run: chmod +x node_modules/.bin/expo 2>/dev/null || true
 
       - name: Create env file
         working-directory: SafePit_Full/frontend
@@ -45,8 +45,22 @@ jobs:
           NODE_ENV: production
           CI: "1"
 
-      - name: Create 404.html for SPA routing
-        run: cp SafePit_Full/frontend/dist/index.html SafePit_Full/frontend/dist/404.html
+      - name: Fix asset paths for GitHub Pages
+        working-directory: SafePit_Full/frontend/dist
+        run: |
+          # Fix all href and src paths in HTML files
+          find . -name "*.html" -exec sed -i \
+            -e 's|href="/|href="/Safetypit/|g' \
+            -e 's|src="/|src="/Safetypit/|g' \
+            -e 's|href="/Safetypit/Safetypit/|href="/Safetypit/|g' \
+            -e 's|src="/Safetypit/Safetypit/|src="/Safetypit/|g' {} \;
+          # Fix JS bundle paths
+          find . -name "*.js" -exec sed -i \
+            -e 's|"/_expo/|"/Safetypit/_expo/|g' \
+            -e 's|"/_expo/static/|"/Safetypit/_expo/static/|g' \
+            -e 's|"/Safetypit/Safetypit/|"/Safetypit/|g' {} \;
+          # SPA fallback
+          cp index.html 404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
