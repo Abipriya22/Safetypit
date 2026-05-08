@@ -30,15 +30,20 @@ jobs:
         working-directory: SafePit_Full/frontend
         run: npm install
 
+      - name: Fix expo binary permissions
+        working-directory: SafePit_Full/frontend
+        run: chmod +x node_modules/.bin/expo node_modules/.bin/react-native 2>/dev/null || true
+
       - name: Create env file
         working-directory: SafePit_Full/frontend
         run: echo "EXPO_PUBLIC_API_URL=http://localhost:5000" > .env
 
       - name: Export Expo web build
         working-directory: SafePit_Full/frontend
-        run: npx expo export -p web
+        run: ./node_modules/.bin/expo export -p web
         env:
           NODE_ENV: production
+          CI: "1"
 
       - name: Create 404.html for SPA routing
         run: cp SafePit_Full/frontend/dist/index.html SafePit_Full/frontend/dist/404.html
