@@ -24,7 +24,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18"
+
+      - name: Install Expo CLI globally
+        run: npm install -g expo-cli @expo/cli
 
       - name: Install frontend dependencies
         working-directory: SafePit_Full/frontend
@@ -35,13 +38,12 @@ jobs:
         run: |
           echo "EXPO_PUBLIC_API_URL=http://localhost:5000" > .env
 
-      - name: Export Expo web
+      - name: Export Expo web build
         working-directory: SafePit_Full/frontend
-        run: npx expo export --platform web
+        run: npx expo export -p web
 
       - name: Create 404.html for SPA routing
-        working-directory: SafePit_Full/frontend/dist
-        run: cp index.html 404.html
+        run: cp SafePit_Full/frontend/dist/index.html SafePit_Full/frontend/dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
