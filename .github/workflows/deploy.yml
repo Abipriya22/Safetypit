@@ -26,17 +26,17 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install Expo CLI globally
-        run: npm install -g expo-cli @expo/cli
-
       - name: Install frontend dependencies
         working-directory: SafePit_Full/frontend
         run: npm install
 
+      - name: Install Expo CLI
+        working-directory: SafePit_Full/frontend
+        run: npm install -g @expo/cli
+
       - name: Create env file
         working-directory: SafePit_Full/frontend
-        run: |
-          echo "EXPO_PUBLIC_API_URL=http://localhost:5000" > .env
+        run: echo "EXPO_PUBLIC_API_URL=http://localhost:5000" > .env
 
       - name: Export Expo web build
         working-directory: SafePit_Full/frontend
