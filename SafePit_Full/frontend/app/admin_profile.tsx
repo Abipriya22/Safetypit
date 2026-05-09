@@ -10,7 +10,6 @@ import { authAPI, contentAPI, storage } from '../services/api';
 // FIX: Use LanguageContext instead of local translate() so change is app-wide
 import { useLanguage } from '../services/LanguageContext';
 
-// Admin profile screen showing system stats and admin info
 export default function AdminProfile() {
   const router = useRouter();
   const { setLang, T } = useLanguage();
@@ -50,7 +49,7 @@ export default function AdminProfile() {
       </View>
     );
   }
-
+// FIX: Add pull-to-refresh for stats update
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
