@@ -37,7 +37,6 @@ const getMyChecklist = async (req, res) => {
       'SELECT job_role, preferred_lang FROM user WHERE user_id = ?', [id]
     );
     const jobRole  = userRows[0]?.job_role     || 'General';
-    // Priority: query param lang > user preferred_lang > English
     const userLang = req.query.lang || userRows[0]?.preferred_lang || 'English';
 
     // Try fetching tasks in requested language

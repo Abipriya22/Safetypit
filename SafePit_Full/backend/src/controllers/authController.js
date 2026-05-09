@@ -22,7 +22,6 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'unregistered_person' });
     }
 
-    // ✅ FIX 5 STEP 2: Email exists but wrong role selected
     const userWithRole = emailRows.find(u => u.role === role);
     if (!userWithRole) {
       return res.status(401).json({ success: false, message: 'unregistered_person' });
