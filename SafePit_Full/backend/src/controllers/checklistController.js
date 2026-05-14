@@ -1,6 +1,6 @@
 // src/controllers/checklistController.js
 const { pool } = require('../config/db');
-const { translate } = require('@vitalets/google-translate-api');
+const { translate } = require('google-translate-api-x');
 
 const LANG_CODES = {
   English: 'en',
@@ -10,18 +10,19 @@ const LANG_CODES = {
   Odia:    'or',
 };
 
-// Translate text to all 5 languages
-const translateAll = async (text) => {
-  const langs   = ['Hindi', 'Tamil', 'Telugu', 'Odia'];
-  const results = { English: text };
+// Translate text to all 5 languages using the provided source language
+const translateAll = async (text, sourceLang = 'English') => {
+  const langs   = ['English', 'Hindi', 'Tamil', 'Telugu', 'Odia'];
+  const results = { [sourceLang]: text };
+  const targets = langs.filter(lang => lang !== sourceLang);
 
-  for (const lang of langs) {
+  for (const lang of targets) {
     try {
-      const res    = await translate(text, { to: LANG_CODES[lang] });
+      const res    = await translate(text, { to: LANG_CODES[lang], client: 'gtx' });
       results[lang] = res.text;
     } catch (err) {
       console.error(`Translate error (${lang}):`, err.message);
-      results[lang] = text; // fallback to English on error
+      results[lang] = text;
     }
   }
   return results;
@@ -156,12 +157,16 @@ const toggleTask = async (req, res) => {
 
 // POST /api/checklist — Admin creates task (auto-translates to all 5 languages)
 const createTask = async (req, res) => {
-  const { task_description, role_target, shift_target } = req.body;
+  const { task_description, role_target, shift_target, lang: sourceLang = 'English' } = req.body;
+  const ALL_LANGS = ['English', 'Hindi', 'Tamil', 'Telugu', 'Odia'];
+
   if (!task_description?.trim())
     return res.status(400).json({ success: false, message: 'Task description required.' });
+  if (!ALL_LANGS.includes(sourceLang))
+    return res.status(400).json({ success: false, message: 'Invalid language.' });
 
   try {
-    const translated    = await translateAll(task_description.trim());
+    const translated    = await translateAll(task_description.trim(), sourceLang);
     const task_group_id = Date.now();
     const langs         = ['English', 'Hindi', 'Tamil', 'Telugu', 'Odia'];
 

@@ -101,7 +101,7 @@ export const checklistAPI = {
   getAllTasks:         () => req('GET', '/checklist/all'),
   getWorkersProgress: (lang?: string) =>
     req('GET', `/checklist/workers-progress${lang ? `?lang=${lang}` : ''}`),
-  createTask:         (data: { task_description: string; role_target?: string; shift_target?: string }) =>
+  createTask:         (data: { task_description: string; role_target?: string; shift_target?: string; lang?: string }) =>
     req('POST', '/checklist', data),
   deleteTask:         (id: number) => req('DELETE', `/checklist/${id}`),
 };

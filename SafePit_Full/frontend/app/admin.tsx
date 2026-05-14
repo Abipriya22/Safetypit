@@ -119,6 +119,7 @@ export default function AdminDashboard() {
           task_description: taskDesc.trim(),
           role_target: taskRole,
           shift_target: 'All',
+          lang: uploadLang,
         });
         setTaskDesc('');
         setTaskRole('all');

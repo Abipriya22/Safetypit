@@ -1,14 +1,14 @@
 // backend/src/controllers/contentController.js
 const { pool } = require('../config/db');
+const { translate } = require('google-translate-api-x');
 
 // ── Safe translate helper (never throws) ────────────────────────
 // Falls back to original text if translation fails
 const safeTranslate = async (text, targetLang) => {
   if (targetLang === 'English') return text;
   try {
-    const { translate } = require('@vitalets/google-translate-api');
     const LANG_CODES = { Hindi: 'hi', Tamil: 'ta', Telugu: 'te', Odia: 'or' };
-    const res = await translate(text, { to: LANG_CODES[targetLang] });
+    const res = await translate(text, { to: LANG_CODES[targetLang], client: 'gtx' });
     return res.text || text;
   } catch (err) {
     // Translation failed (rate limit / network) → use English text
@@ -53,7 +53,7 @@ const getContent = async (req, res) => {
 // Saves English immediately, then translates to other 4 languages
 // If translation fails for any lang → saves English text as fallback
 const createContent = async (req, res) => {
-  const { type, title, content } = req.body;
+  const { type, title, content, lang: sourceLang = 'English' } = req.body;
   const VALID_TYPES = ['safety_tip', 'positive_statement', 'dgms_guideline'];
   const ALL_LANGS   = ['English', 'Hindi', 'Tamil', 'Telugu', 'Odia'];
 
@@ -63,54 +63,50 @@ const createContent = async (req, res) => {
   if (!VALID_TYPES.includes(type)) {
     return res.status(400).json({ success: false, message: 'Invalid content type.' });
   }
+  if (!ALL_LANGS.includes(sourceLang)) {
+    return res.status(400).json({ success: false, message: 'Invalid language.' });
+  }
 
   const adminId      = req.user.id;
-  const englishText  = content.trim();
-  const englishTitle = title?.trim() || '';
+  const sourceText   = content.trim();
+  const sourceTitle  = title?.trim() || '';
+  const otherLangs   = ALL_LANGS.filter(lang => lang !== sourceLang);
 
   try {
-    // Insert English immediately (no translation needed)
     await pool.execute(
-      `INSERT INTO reports (user_id, type, title, content, lang) VALUES (?, ?, ?, ?, 'English')`,
-      [adminId, type, englishTitle, englishText]
+      `INSERT INTO reports (user_id, type, title, content, lang) VALUES (?, ?, ?, ?, ?)`,
+      [adminId, type, sourceTitle, sourceText, sourceLang]
     );
 
-    // Translate & insert other 4 languages in background (don't block response)
-    const otherLangs = ['Hindi', 'Tamil', 'Telugu', 'Odia'];
-
-    // Respond success right away — English is saved
     res.status(201).json({
       success: true,
-      message: 'Content saved. Translating to other languages...',
+      message: `Content saved in ${sourceLang}. Translating to other languages...`,
     });
 
-    // Background translations (errors won't affect the response)
     for (const lang of otherLangs) {
       try {
-        const translatedContent = await safeTranslate(englishText, lang);
-        const translatedTitle   = englishTitle
-          ? await safeTranslate(englishTitle, lang)
+        const translatedContent = await safeTranslate(sourceText, lang);
+        const translatedTitle   = sourceTitle
+          ? await safeTranslate(sourceTitle, lang)
           : '';
         await pool.execute(
           `INSERT INTO reports (user_id, type, title, content, lang) VALUES (?, ?, ?, ?, ?)`,
           [adminId, type, translatedTitle, translatedContent, lang]
         );
       } catch (langErr) {
-        // If insert fails for one lang, save English as fallback for that lang
         console.warn(`Insert fallback for ${lang}:`, langErr.message);
         try {
           await pool.execute(
             `INSERT INTO reports (user_id, type, title, content, lang) VALUES (?, ?, ?, ?, ?)`,
-            [adminId, type, englishTitle, englishText, lang]
+            [adminId, type, sourceTitle, sourceText, lang]
           );
         } catch (_) {
-          // ignore duplicate
+          // ignore duplicate/failure
         }
       }
     }
   } catch (err) {
     console.error('createContent:', err);
-    // Only send error if we haven't responded yet
     if (!res.headersSent) {
       return res.status(500).json({ success: false, message: 'Failed to save content: ' + err.message });
     }
