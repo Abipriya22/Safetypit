@@ -1,6 +1,8 @@
 // frontend/services/api.ts
 import { Platform } from 'react-native';
 
+const PRODUCTION_URL = 'https://safetypit.onrender.com';
+
 // ── Get token (web: localStorage, native: AsyncStorage) ──────────────
 const getToken = async (): Promise<string | null> => {
   if (Platform.OS === 'web') {
@@ -10,19 +12,19 @@ const getToken = async (): Promise<string | null> => {
   return AsyncStorage.getItem('token');
 };
 
-// ── Get BASE URL (auto-detect PC IP for physical phone) ──────────────
+// ── Get BASE URL ──────────────────────────────────────────────────────
 const getBaseUrl = (): string => {
   if (Platform.OS === 'web') {
     return process.env.EXPO_PUBLIC_API_URL
       ? `${process.env.EXPO_PUBLIC_API_URL}/api`
-      : 'http://localhost:5000/api';
+      : `${PRODUCTION_URL}/api`;
   }
   try {
     const Constants = require('expo-constants').default;
     const host = Constants.expoConfig?.hostUri?.split(':')[0];
     if (host) return `http://${host}:5000/api`;
   } catch {}
-  return 'http://localhost:5000/api';
+  return `${PRODUCTION_URL}/api`;
 };
 
 // ── Core request helper ──────────────────────────────────────────────
