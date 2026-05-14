@@ -1,0 +1,67 @@
+name: Deploy SafetyPit Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        working-directory: SafePit_Full/frontend
+        run: npm install
+
+      - name: Fix expo binary permissions
+        working-directory: SafePit_Full/frontend
+        run: chmod +x node_modules/.bin/expo 2>/dev/null || true
+
+      - name: Create env file
+        working-directory: SafePit_Full/frontend
+        run: echo "EXPO_PUBLIC_API_URL=${{ secrets.EXPO_PUBLIC_API_URL }}" > .env
+
+      - name: Export Expo web build
+        working-directory: SafePit_Full/frontend
+        run: ./node_modules/.bin/expo export -p web
+        env:
+          NODE_ENV: production
+
+      - name: Create 404.html
+        run: cp SafePit_Full/frontend/dist/index.html SafePit_Full/frontend/dist/404.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: SafePit_Full/frontend/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

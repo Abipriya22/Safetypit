@@ -41,7 +41,6 @@ export default function AdminDashboard() {
   const [successMsg, setSuccessMsg]     = useState<string | null>(null);
   const [validationMsg, setValidationMsg] = useState<string | null>(null);
 
-  // ── Load all data ────────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
       const [statsRes, reportsRes, tasksRes] = await Promise.all([
@@ -81,7 +80,6 @@ export default function AdminDashboard() {
     setTimeout(() => setValidationMsg(null), 3500);
   };
 
-  // ── Upload content ───────────────────────────────────────────────
   const upload = async (type: string) => {
     if (type === 'statement' && !statement.trim())                     { showError(T('fill_required')); return; }
     if (type === 'tip'       && !tipText.trim())                       { showError(T('fill_required')); return; }

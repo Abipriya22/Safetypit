@@ -3,7 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { storage } from '../services/api';
 import { LanguageProvider } from '../services/LanguageContext';
-
+// This is the root layout of your app. It is shared across all the pages of your app.
 export default function RootLayout() {
   const router   = useRouter();
   const segments = useSegments();
